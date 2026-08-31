@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --animate-star-movement-bottom: star-movement-bottom linear infinite alternate;
+  --animate-star-movement-top: star-movement-top linear infinite alternate;
+  --animate-float: float 3s ease-in-out infinite;
+}
+
+@keyframes star-movement-bottom {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-100%, 0%);
+    opacity: 0;
+  }
+}
+
+@keyframes star-movement-top {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100%, 0%);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5
+      text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-blue-700
+      hover:-translate-y-px hover:shadow-md active:translate-y-0 active:scale-[0.98]
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50
+      disabled:hover:translate-y-0 disabled:hover:shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300
+      bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all
+      duration-150 hover:bg-slate-50 hover:-translate-y-px active:translate-y-0
+      active:scale-[0.98] focus-visible:outline focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed
+      disabled:opacity-50 disabled:hover:translate-y-0;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm
+      font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100
+      hover:text-slate-900 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
+      placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none
+      focus:ring-2 focus:ring-blue-500/20;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .card-interactive {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm transition-all
+      hover:border-slate-300 hover:shadow-md;
+  }
+}
