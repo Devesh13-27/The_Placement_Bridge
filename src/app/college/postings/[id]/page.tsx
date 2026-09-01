@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
 import Nav from "@/components/Nav";
-import { STATUS_LABEL, STATUS_COLOR } from "@/lib/statusStyles";
+import StatusBadge from "@/components/StatusBadge";
 import InterestForm from "./InterestForm";
 import TpThreadPanel from "./TpThreadPanel";
 import type { Posting } from "@/lib/types";
@@ -89,11 +89,9 @@ export default async function CollegePostingDetail({
               <p className="mt-2 max-w-xl text-sm text-slate-600">{posting.description}</p>
             )}
           </div>
-          <span
-            className={`shrink-0 self-start rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLOR[posting.status as keyof typeof STATUS_COLOR]}`}
-          >
-            {STATUS_LABEL[posting.status as keyof typeof STATUS_LABEL]}
-          </span>
+          <div className="shrink-0 self-start">
+            <StatusBadge status={posting.status} />
+          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-5">

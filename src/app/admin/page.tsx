@@ -42,7 +42,8 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+      <header className="border-b border-slate-200/80 bg-white/80 shadow-sm shadow-slate-900/[0.02] backdrop-blur">
+        <div className="h-0.5 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600" />
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5">
           <Logo textClassName="hidden sm:inline" />
           <LogoutButton />

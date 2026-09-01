@@ -5,7 +5,7 @@ import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
 import StatCard from "@/components/StatCard";
-import { STATUS_LABEL, STATUS_COLOR } from "@/lib/statusStyles";
+import StatusBadge from "@/components/StatusBadge";
 
 export default async function CompanyDashboard() {
   const profile = await requireVerifiedRole("hr");
@@ -52,9 +52,9 @@ export default async function CompanyDashboard() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {!!postings?.length && (
           <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
-            <StatCard label="Open postings" value={openCount} accent="text-green-600" />
-            <StatCard label="Camps scheduled" value={campScheduledCount} accent="text-blue-600" />
-            <StatCard label="Total interested" value={totalInterested} />
+            <StatCard label="Open postings" value={openCount} icon="📋" tone="green" />
+            <StatCard label="Camps scheduled" value={campScheduledCount} icon="📅" tone="blue" />
+            <StatCard label="Total interested" value={totalInterested} icon="🎯" />
           </div>
         )}
 
@@ -93,11 +93,7 @@ export default async function CompanyDashboard() {
                   <span className="text-sm text-slate-500">
                     {interestByPosting.get(p.id) ?? 0} interested
                   </span>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLOR[p.status as keyof typeof STATUS_COLOR]}`}
-                  >
-                    {STATUS_LABEL[p.status as keyof typeof STATUS_LABEL]}
-                  </span>
+                  <StatusBadge status={p.status} />
                 </div>
               </div>
             </Link>

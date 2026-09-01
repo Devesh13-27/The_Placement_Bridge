@@ -52,12 +52,13 @@ export default async function CollegeDashboard() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {!!postings?.length && (
           <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
-            <StatCard label="Open opportunities" value={postings.length} accent="text-green-600" />
-            <StatCard label="Interest logged" value={totalInterestLogged} />
+            <StatCard label="Open opportunities" value={postings.length} icon="💼" tone="green" />
+            <StatCard label="Interest logged" value={totalInterestLogged} icon="🎯" />
             <StatCard
               label="Upcoming camps"
               value={upcomingCampsCount ?? 0}
-              accent="text-blue-600"
+              icon="📅"
+              tone="blue"
             />
           </div>
         )}

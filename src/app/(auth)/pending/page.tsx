@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
 import FullLogo from "@/components/FullLogo";
+import AuthBackdrop from "@/components/AuthBackdrop";
 
 export default async function PendingPage() {
   const profile = await getCurrentProfile();
@@ -25,7 +26,8 @@ export default async function PendingPage() {
     profile.verification_status === "rejected" || org?.verification_status === "rejected";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+      <AuthBackdrop />
       <FullLogo className="mb-2" />
       <div className="card w-full max-w-md p-6 text-center sm:p-8">
         <div

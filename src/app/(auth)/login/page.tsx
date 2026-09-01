@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import FullLogo from "@/components/FullLogo";
+import AuthBackdrop from "@/components/AuthBackdrop";
 import BlurText from "@/components/reactbits/BlurText";
 import StarBorder from "@/components/reactbits/StarBorder";
 
@@ -35,7 +36,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+      <AuthBackdrop />
       <FullLogo className="mb-2" size="w-44 sm:w-64" />
 
       <div className="card w-full max-w-md p-6 sm:p-8">

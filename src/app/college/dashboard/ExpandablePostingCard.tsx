@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { STATUS_LABEL, STATUS_COLOR } from "@/lib/statusStyles";
+import StatusBadge from "@/components/StatusBadge";
 import type { Posting } from "@/lib/types";
 
 type PostingWithCompany = Posting & { companies: { name: string } | null };
@@ -47,11 +47,7 @@ export default function ExpandablePostingCard({
           ) : (
             <span className="text-sm font-medium text-amber-600">Log your interest →</span>
           )}
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLOR[p.status as keyof typeof STATUS_COLOR]}`}
-          >
-            {STATUS_LABEL[p.status as keyof typeof STATUS_LABEL]}
-          </span>
+          <StatusBadge status={p.status} />
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
             transition={{ duration: 0.2 }}
