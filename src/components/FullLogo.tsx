@@ -11,8 +11,8 @@ export default function FullLogo({
     <Image
       src="/brand/logo-full.png"
       alt="The Placement Bridge"
-      width={1254}
-      height={1254}
+      width={1086}
+      height={587}
       priority
       className={`h-auto ${size} ${className}`}
     />

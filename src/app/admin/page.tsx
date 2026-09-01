@@ -5,6 +5,7 @@ import LogoutButton from "@/components/LogoutButton";
 import Logo from "@/components/Logo";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
+import Icon from "@/components/Icon";
 import ApprovalRow from "./ApprovalRow";
 import type { Company, College } from "@/lib/types";
 
@@ -59,7 +60,11 @@ export default async function AdminPage() {
         </div>
 
         {!pendingProfiles?.length && (
-          <EmptyState icon="✓" title="Nothing pending" description="All signups are caught up." />
+          <EmptyState
+            icon={<Icon name="check" />}
+            title="Nothing pending"
+            description="All signups are caught up."
+          />
         )}
 
         <FadeInStagger className="space-y-3">

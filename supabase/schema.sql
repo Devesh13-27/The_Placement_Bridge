@@ -113,6 +113,13 @@ create table camps_visits (
   created_at timestamptz not null default now()
 );
 
+-- Only one active (proposed/confirmed) camp or visit per posting+college at
+-- a time. The app re-proposes by updating this row rather than inserting a
+-- new one; this index is the DB-level backstop against duplicates.
+create unique index camps_visits_one_active_per_posting_college
+  on camps_visits (posting_id, college_id)
+  where status in ('proposed', 'confirmed');
+
 -- ─────────────────────────────────────────────────────────────────────────
 -- Helper functions (used by RLS policies)
 --

@@ -3,6 +3,7 @@ import { requireVerifiedRole } from "@/lib/guards";
 import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
+import Icon from "@/components/Icon";
 import { CAMP_STATUS_LABEL } from "@/lib/statusStyles";
 import ConfirmButton from "./ConfirmButton";
 import type { CampVisit } from "@/lib/types";
@@ -45,7 +46,7 @@ export default async function CollegeCampsPage() {
 
         {!camps?.length && (
           <EmptyState
-            icon="📅"
+            icon={<Icon name="calendar" />}
             title="Nothing scheduled yet"
             description="Once you and a company agree on a camp or visit, it'll be tracked here."
           />

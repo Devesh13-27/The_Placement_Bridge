@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
 import StatCard from "@/components/StatCard";
+import Icon from "@/components/Icon";
 import ExpandablePostingCard from "./ExpandablePostingCard";
 import type { Posting } from "@/lib/types";
 
@@ -52,12 +53,21 @@ export default async function CollegeDashboard() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {!!postings?.length && (
           <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
-            <StatCard label="Open opportunities" value={postings.length} icon="💼" tone="green" />
-            <StatCard label="Interest logged" value={totalInterestLogged} icon="🎯" />
+            <StatCard
+              label="Open opportunities"
+              value={postings.length}
+              icon={<Icon name="briefcase" />}
+              tone="green"
+            />
+            <StatCard
+              label="Interest logged"
+              value={totalInterestLogged}
+              icon={<Icon name="users" />}
+            />
             <StatCard
               label="Upcoming camps"
               value={upcomingCampsCount ?? 0}
-              icon="📅"
+              icon={<Icon name="calendar" />}
               tone="blue"
             />
           </div>
@@ -67,7 +77,7 @@ export default async function CollegeDashboard() {
 
         {!postings?.length && (
           <EmptyState
-            icon="📭"
+            icon={<Icon name="inbox" />}
             title="No openings posted yet"
             description="Once a company posts a hiring opening, it'll show up here for you to log interest against."
           />

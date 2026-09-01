@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
 import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
+import Icon from "@/components/Icon";
 import StatusSelect from "./StatusSelect";
 import ThreadPanel from "./ThreadPanel";
 import type { InterestReport, Message, CampVisit } from "@/lib/types";
@@ -104,7 +105,7 @@ export default async function CompanyPostingDetail({
             </h2>
             {!interests?.length && (
               <EmptyState
-                icon="🏫"
+                icon={<Icon name="academicCap" />}
                 title="No interest yet"
                 description="Once a T&P officer logs interest, they'll show up here."
               />

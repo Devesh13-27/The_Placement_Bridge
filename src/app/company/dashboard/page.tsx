@@ -6,6 +6,7 @@ import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
+import Icon from "@/components/Icon";
 
 export default async function CompanyDashboard() {
   const profile = await requireVerifiedRole("hr");
@@ -52,9 +53,23 @@ export default async function CompanyDashboard() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {!!postings?.length && (
           <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
-            <StatCard label="Open postings" value={openCount} icon="📋" tone="green" />
-            <StatCard label="Camps scheduled" value={campScheduledCount} icon="📅" tone="blue" />
-            <StatCard label="Total interested" value={totalInterested} icon="🎯" />
+            <StatCard
+              label="Open postings"
+              value={openCount}
+              icon={<Icon name="briefcase" />}
+              tone="green"
+            />
+            <StatCard
+              label="Camps scheduled"
+              value={campScheduledCount}
+              icon={<Icon name="calendar" />}
+              tone="blue"
+            />
+            <StatCard
+              label="Total interested"
+              value={totalInterested}
+              icon={<Icon name="users" />}
+            />
           </div>
         )}
 
@@ -67,7 +82,7 @@ export default async function CompanyDashboard() {
 
         {!postings?.length && (
           <EmptyState
-            icon="📋"
+            icon={<Icon name="document" />}
             title="No postings yet"
             description="Create one to start reaching colleges and see who's interested."
             action={

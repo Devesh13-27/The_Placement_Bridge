@@ -78,14 +78,30 @@ export async function proposeCamp(
   const profile = await requireVerifiedRole("hr");
   const supabase = await createClient();
 
-  const { error } = await supabase.from("camps_visits").insert({
-    posting_id: postingId,
-    company_id: companyId,
-    college_id: collegeId,
-    type,
-    scheduled_date: scheduledDate,
-    created_by: profile.id,
-  });
+  // One active (proposed/confirmed) camp or visit per posting+college at a
+  // time — re-proposing updates that existing row (e.g. to change the date)
+  // instead of creating a duplicate.
+  const { data: existing } = await supabase
+    .from("camps_visits")
+    .select("id")
+    .eq("posting_id", postingId)
+    .eq("college_id", collegeId)
+    .in("status", ["proposed", "confirmed"])
+    .maybeSingle();
+
+  const { error } = existing
+    ? await supabase
+        .from("camps_visits")
+        .update({ type, scheduled_date: scheduledDate, status: "proposed" })
+        .eq("id", existing.id)
+    : await supabase.from("camps_visits").insert({
+        posting_id: postingId,
+        company_id: companyId,
+        college_id: collegeId,
+        type,
+        scheduled_date: scheduledDate,
+        created_by: profile.id,
+      });
 
   if (error) throw new Error(error.message);
 
