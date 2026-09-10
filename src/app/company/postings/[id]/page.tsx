@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
+import { formatMonthYear } from "@/lib/utils";
 import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import Icon from "@/components/Icon";
@@ -89,7 +90,7 @@ export default async function CompanyPostingDetail({
             <h1 className="text-xl font-semibold text-slate-900">{posting.role_title}</h1>
             <p className="mt-1 text-sm text-slate-500">
               {posting.branches.join(", ")} · {posting.num_openings} openings ·{" "}
-              {posting.target_start} → {posting.target_end}
+              {formatMonthYear(posting.target_start)} → {formatMonthYear(posting.target_end)}
             </p>
             {posting.description && (
               <p className="mt-2 max-w-xl text-sm text-slate-600">{posting.description}</p>
@@ -143,9 +144,11 @@ export default async function CompanyPostingDetail({
                 camp={camp}
               />
             ) : (
-              <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-500">
-                Select a college to message them or schedule a camp.
-              </div>
+              <EmptyState
+                icon={<Icon name="academicCap" />}
+                title="No college selected"
+                description="Select a college from the list to message them or schedule a recruitment camp."
+              />
             )}
           </div>
         </div>

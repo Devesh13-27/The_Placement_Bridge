@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPosting } from "@/app/company/actions";
+import FormField from "@/components/FormField";
 
 export default function NewPostingPage() {
   const router = useRouter();
@@ -13,13 +14,13 @@ export default function NewPostingPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    try {
-      await createPosting(new FormData(e.currentTarget));
-      router.push("/company/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+    const result = await createPosting(new FormData(e.currentTarget));
+    if (!result.success) {
+      setError(result.error ?? "Something went wrong.");
       setLoading(false);
+      return;
     }
+    router.push("/company/dashboard");
   }
 
   return (
@@ -30,17 +31,17 @@ export default function NewPostingPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="card mt-6 space-y-4 p-5 sm:p-6">
-        <Field label="Role title" name="roleTitle" required />
-        <Field
+        <FormField label="Role title" name="roleTitle" required />
+        <FormField
           label="Target branches / fields (comma-separated)"
           name="branches"
           placeholder="CSE, ECE, Mechanical"
           required
         />
-        <Field label="Number of openings" name="numOpenings" type="number" min={1} required />
+        <FormField label="Number of openings" name="numOpenings" type="number" min={1} required />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Target start date" name="targetStart" type="date" required />
-          <Field label="Target end date" name="targetEnd" type="date" required />
+          <FormField label="Target start date" name="targetStart" type="date" required />
+          <FormField label="Target end date" name="targetEnd" type="date" required />
         </div>
         <label className="block text-sm">
           <span className="field-label">Description (optional)</span>
@@ -59,32 +60,4 @@ export default function NewPostingPage() {
   );
 }
 
-function Field({
-  label,
-  name,
-  type = "text",
-  required,
-  min,
-  placeholder,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  min?: number;
-  placeholder?: string;
-}) {
-  return (
-    <label className="block text-sm">
-      <span className="field-label">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        min={min}
-        placeholder={placeholder}
-        className="input-field"
-      />
-    </label>
-  );
-}
+

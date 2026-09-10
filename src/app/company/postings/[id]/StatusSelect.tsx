@@ -16,7 +16,7 @@ export default function StatusSelect({
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as PostingStatus;
-    startTransition(() => updatePostingStatus(postingId, next));
+    startTransition(() => { void updatePostingStatus(postingId, next); });
   }
 
   return (

@@ -7,6 +7,7 @@ import FullLogo from "@/components/FullLogo";
 import AuthBackdrop from "@/components/AuthBackdrop";
 import BlurText from "@/components/reactbits/BlurText";
 import StarBorder from "@/components/reactbits/StarBorder";
+import FormField from "@/components/FormField";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,17 +51,13 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-slate-500">Welcome back to Placement Bridge.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <label className="block text-sm">
-            <span className="field-label">Email</span>
-            <input name="email" type="email" required className="input-field" />
-          </label>
-          <label className="block text-sm">
-            <span className="field-label">Password</span>
-            <input name="password" type="password" required className="input-field" />
-          </label>
+          <FormField label="Email" name="email" type="email" required />
+          <FormField label="Password" name="password" type="password" required />
 
           {error && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
           )}
 
           <StarBorder

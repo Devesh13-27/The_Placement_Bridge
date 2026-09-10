@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import StatusBadge from "@/components/StatusBadge";
+import { formatMonthYear } from "@/lib/utils";
 import type { Posting } from "@/lib/types";
 
 type PostingWithCompany = Posting & { companies: { name: string } | null };
@@ -36,7 +37,7 @@ export default function ExpandablePostingCard({
             <span className="font-normal text-slate-500">· {p.companies?.name}</span>
           </p>
           <p className="text-sm text-slate-500">
-            {p.branches.join(", ")} · {p.num_openings} openings · {p.target_start} → {p.target_end}
+            {p.branches.join(", ")} · {p.num_openings} openings · {formatMonthYear(p.target_start)} → {formatMonthYear(p.target_end)}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">

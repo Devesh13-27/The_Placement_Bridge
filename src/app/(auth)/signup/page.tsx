@@ -8,6 +8,7 @@ import FullLogo from "@/components/FullLogo";
 import AuthBackdrop from "@/components/AuthBackdrop";
 import BlurText from "@/components/reactbits/BlurText";
 import StarBorder from "@/components/reactbits/StarBorder";
+import FormField from "@/components/FormField";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -64,9 +65,14 @@ export default function SignupPage() {
           Invite-only portal for verified company HR and college T&amp;P teams.
         </p>
 
-        <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+        <div
+          role="group"
+          aria-label="Account type"
+          className="mt-6 grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1"
+        >
           <button
             type="button"
+            aria-pressed={role === "tp"}
             onClick={() => setRole("tp")}
             className={`rounded-md py-2 text-sm font-semibold transition-all ${
               role === "tp"
@@ -78,6 +84,7 @@ export default function SignupPage() {
           </button>
           <button
             type="button"
+            aria-pressed={role === "hr"}
             onClick={() => setRole("hr")}
             className={`rounded-md py-2 text-sm font-semibold transition-all ${
               role === "hr"
@@ -92,23 +99,25 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input type="hidden" name="role" value={role} />
 
-          <Field label="Full name" name="fullName" required />
-          <Field
+          <FormField label="Full name" name="fullName" required />
+          <FormField
             label={role === "hr" ? "Official company email" : "Official college email"}
             name="email"
             type="email"
             required
           />
-          <Field label="Password" name="password" type="password" required minLength={8} />
-          <Field
+          <FormField label="Password" name="password" type="password" required minLength={8} />
+          <FormField
             label={role === "hr" ? "Company name" : "College name"}
             name="orgName"
             required
           />
-          {role === "tp" && <Field label="City" name="orgCity" />}
+          {role === "tp" && <FormField label="City" name="orgCity" />}
 
           {error && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
           )}
 
           <StarBorder
@@ -131,29 +140,4 @@ export default function SignupPage() {
   );
 }
 
-function Field({
-  label,
-  name,
-  type = "text",
-  required,
-  minLength,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  minLength?: number;
-}) {
-  return (
-    <label className="block text-sm">
-      <span className="field-label">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        minLength={minLength}
-        className="input-field"
-      />
-    </label>
-  );
-}
+

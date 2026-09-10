@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
+import { formatMonthYear } from "@/lib/utils";
 import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
@@ -20,29 +21,25 @@ export default async function CompanyDashboard() {
 
   const { data: postings } = await supabase
     .from("postings")
-    .select("*")
+    .select("*, interest_reports(interested_count)")
     .eq("company_id", profile.company_id)
     .order("created_at", { ascending: false });
 
-  const postingIds = (postings ?? []).map((p) => p.id);
-  const { data: interests } = postingIds.length
-    ? await supabase
-        .from("interest_reports")
-        .select("posting_id, interested_count")
-        .in("posting_id", postingIds)
-    : { data: [] as { posting_id: string; interested_count: number }[] };
+  type PostingWithInterest = NonNullable<typeof postings>[number];
 
-  const interestByPosting = new Map<string, number>();
-  for (const row of interests ?? []) {
-    interestByPosting.set(
-      row.posting_id,
-      (interestByPosting.get(row.posting_id) ?? 0) + row.interested_count,
-    );
-  }
+  const interestByPosting = new Map<string, number>(
+    (postings ?? []).map((p) => [
+      p.id,
+      ((p as PostingWithInterest).interest_reports ?? []).reduce(
+        (sum: number, r: { interested_count: number }) => sum + r.interested_count,
+        0,
+      ),
+    ]),
+  );
 
   const openCount = (postings ?? []).filter((p) => p.status === "open").length;
   const campScheduledCount = (postings ?? []).filter((p) => p.status === "camp_scheduled").length;
-  const totalInterested = (interests ?? []).reduce((sum, r) => sum + r.interested_count, 0);
+  const totalInterested = Array.from(interestByPosting.values()).reduce((a, b) => a + b, 0);
 
   return (
     <div>
@@ -76,7 +73,8 @@ export default async function CompanyDashboard() {
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-xl font-semibold text-slate-900">Your hiring postings</h1>
           <Link href="/company/postings/new" className="btn-primary sm:self-auto">
-            + New posting
+            <Icon name="plus" />
+            New posting
           </Link>
         </div>
 
@@ -87,7 +85,8 @@ export default async function CompanyDashboard() {
             description="Create one to start reaching colleges and see who's interested."
             action={
               <Link href="/company/postings/new" className="btn-primary">
-                + New posting
+                <Icon name="plus" />
+                New posting
               </Link>
             }
           />
@@ -101,7 +100,7 @@ export default async function CompanyDashboard() {
                   <p className="font-medium text-slate-900">{p.role_title}</p>
                   <p className="text-sm text-slate-500">
                     {p.branches.join(", ")} · {p.num_openings} openings ·{" "}
-                    {p.target_start} → {p.target_end}
+                    {formatMonthYear(p.target_start)} → {formatMonthYear(p.target_end)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-4">

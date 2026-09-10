@@ -18,7 +18,7 @@ export default function StatCard({
   }[tone];
 
   return (
-    <div className="card-interactive flex items-center gap-3 p-3 sm:p-4">
+    <div className="card flex items-center gap-3 p-3 sm:p-4">
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base sm:h-10 sm:w-10 ${toneStyles.iconBg}`}
       >

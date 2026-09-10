@@ -1,36 +1,70 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
 import type { PostingStatus } from "@/lib/types";
 
-export async function createPosting(formData: FormData) {
+const PostingSchema = z.object({
+  roleTitle: z.string().min(2, "Role title must be at least 2 characters"),
+  branches: z
+    .string()
+    .min(1, "At least one branch is required")
+    .transform((val) => val.split(",").map((b) => b.trim()).filter(Boolean)),
+  numOpenings: z.coerce
+    .number()
+    .int()
+    .min(1, "Must have at least 1 opening"),
+  targetStart: z.string().min(1, "Start date is required"),
+  targetEnd: z.string().min(1, "End date is required"),
+  description: z.string().optional(),
+}).refine(
+  (data) => !data.targetEnd || !data.targetStart || data.targetEnd >= data.targetStart,
+  { message: "End date must be after start date", path: ["targetEnd"] },
+);
+
+type ActionResult = { success: true } | { success: false; error: string };
+
+export async function createPosting(formData: FormData): Promise<ActionResult> {
   const profile = await requireVerifiedRole("hr");
   const supabase = await createClient();
 
-  const branches = (formData.get("branches") as string)
-    .split(",")
-    .map((b) => b.trim())
-    .filter(Boolean);
+  const raw = {
+    roleTitle: formData.get("roleTitle"),
+    branches: formData.get("branches"),
+    numOpenings: formData.get("numOpenings"),
+    targetStart: formData.get("targetStart"),
+    targetEnd: formData.get("targetEnd"),
+    description: formData.get("description") || undefined,
+  };
+
+  const parsed = PostingSchema.safeParse(raw);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0];
+    return { success: false, error: firstError?.message ?? "Invalid input." };
+  }
+
+  const { roleTitle, branches, numOpenings, targetStart, targetEnd, description } = parsed.data;
 
   const { error } = await supabase.from("postings").insert({
     company_id: profile.company_id,
     created_by: profile.id,
-    role_title: formData.get("roleTitle") as string,
+    role_title: roleTitle,
     branches,
-    num_openings: Number(formData.get("numOpenings")),
-    target_start: formData.get("targetStart") as string,
-    target_end: formData.get("targetEnd") as string,
-    description: (formData.get("description") as string) || null,
+    num_openings: numOpenings,
+    target_start: targetStart,
+    target_end: targetEnd,
+    description: description ?? null,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath("/company/dashboard");
+  return { success: true };
 }
 
-export async function updatePostingStatus(postingId: string, status: PostingStatus) {
+export async function updatePostingStatus(postingId: string, status: PostingStatus): Promise<ActionResult> {
   await requireVerifiedRole("hr");
   const supabase = await createClient();
 
@@ -39,10 +73,11 @@ export async function updatePostingStatus(postingId: string, status: PostingStat
     .update({ status })
     .eq("id", postingId);
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath(`/company/postings/${postingId}`);
   revalidatePath("/company/dashboard");
+  return { success: true };
 }
 
 export async function sendMessageAsHr(
@@ -50,7 +85,9 @@ export async function sendMessageAsHr(
   companyId: string,
   collegeId: string,
   body: string,
-) {
+): Promise<ActionResult> {
+  if (!body.trim()) return { success: false, error: "Message cannot be empty." };
+
   const profile = await requireVerifiedRole("hr");
   const supabase = await createClient();
 
@@ -60,12 +97,13 @@ export async function sendMessageAsHr(
     company_id: companyId,
     sender_id: profile.id,
     sender_role: "hr",
-    body,
+    body: body.trim(),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath(`/company/postings/${postingId}`);
+  return { success: true };
 }
 
 export async function proposeCamp(
@@ -74,13 +112,13 @@ export async function proposeCamp(
   collegeId: string,
   type: "camp" | "visit",
   scheduledDate: string,
-) {
+): Promise<ActionResult> {
+  if (!scheduledDate) return { success: false, error: "A date is required." };
+
   const profile = await requireVerifiedRole("hr");
   const supabase = await createClient();
 
-  // One active (proposed/confirmed) camp or visit per posting+college at a
-  // time — re-proposing updates that existing row (e.g. to change the date)
-  // instead of creating a duplicate.
+  // One active camp/visit per posting+college — re-proposing updates instead of duplicating.
   const { data: existing } = await supabase
     .from("camps_visits")
     .select("id")
@@ -103,9 +141,10 @@ export async function proposeCamp(
         created_by: profile.id,
       });
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   await supabase.from("postings").update({ status: "camp_scheduled" }).eq("id", postingId);
 
   revalidatePath(`/company/postings/${postingId}`);
+  return { success: true };
 }
