@@ -10,16 +10,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
   --animate-star-movement-bottom: star-movement-bottom linear infinite alternate;
   --animate-star-movement-top: star-movement-top linear infinite alternate;
   --animate-float: float 3s ease-in-out infinite;
 }
+
+/* ─────────────────────────────────────────
+   Animations
+   ───────────────────────────────────────── */
 
 @keyframes star-movement-bottom {
   0% {
     transform: translate(0%, 0%);
     opacity: 1;
   }
+
   100% {
     transform: translate(-100%, 0%);
     opacity: 0;
@@ -31,6 +37,7 @@
     transform: translate(0%, 0%);
     opacity: 1;
   }
+
   100% {
     transform: translate(100%, 0%);
     opacity: 0;
@@ -42,66 +49,138 @@
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-6px);
   }
 }
 
+/* ─────────────────────────────────────────
+   Base
+   ───────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
   background-image:
-    radial-gradient(700px circle at 0% 0%, oklch(0.7 0.14 250 / 12%), transparent 60%),
-    radial-gradient(800px circle at 100% 0%, oklch(0.75 0.12 220 / 10%), transparent 55%);
+    radial-gradient(
+      700px circle at 0% 0%,
+      oklch(0.7 0.14 250 / 12%),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px circle at 100% 0%,
+      oklch(0.75 0.12 220 / 10%),
+      transparent 55%
+    );
+
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
 
+/* ─────────────────────────────────────────
+   Components
+   ───────────────────────────────────────── */
+
 @layer components {
+  /* Buttons */
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b
-      from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm
-      shadow-blue-600/20 transition-all duration-150 hover:from-blue-500 hover:to-blue-700
-      hover:-translate-y-px hover:shadow-lg hover:shadow-blue-600/30 active:translate-y-0
-      active:scale-[0.98] focus-visible:outline focus-visible:outline-2
-      focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed
-      disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm;
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg
+      bg-gradient-to-b from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-medium
+      text-white shadow-sm shadow-blue-600/20 transition-all duration-150
+      hover:-translate-y-px hover:from-blue-500 hover:to-blue-700
+      hover:shadow-lg hover:shadow-blue-600/30
+      active:translate-y-0 active:scale-[0.98]
+      focus-visible:outline focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-blue-600
+      disabled:cursor-not-allowed disabled:opacity-50
+      disabled:hover:translate-y-0 disabled:hover:shadow-sm;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300
-      bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all
-      duration-150 hover:bg-slate-50 hover:-translate-y-px active:translate-y-0
-      active:scale-[0.98] focus-visible:outline focus-visible:outline-2
-      focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed
-      disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg
+      border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium
+      text-slate-700 shadow-sm transition-all duration-150
+      hover:-translate-y-px hover:bg-slate-50
+      active:translate-y-0 active:scale-[0.98]
+      focus-visible:outline focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-blue-600
+      disabled:cursor-not-allowed disabled:opacity-50
+      disabled:hover:translate-y-0;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm
-      font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100
-      hover:text-slate-900 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg
+      px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150
+      hover:bg-slate-100 hover:text-slate-900
+      active:scale-[0.98]
+      focus-visible:outline focus-visible:outline-2
+      focus-visible:outline-offset-2 focus-visible:outline-blue-600
+      disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  /* Forms */
+
   .input-field {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
-      placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none
-      focus:ring-2 focus:ring-blue-500/20;
+    @apply w-full min-h-10 rounded-lg border border-slate-300 bg-white
+      px-3 py-2 text-sm text-slate-900 shadow-sm
+      placeholder:text-slate-400
+      transition-[border-color,box-shadow,background-color]
+      duration-150
+      hover:border-slate-400
+      focus:border-blue-500
+      focus:outline-none
+      focus:ring-4 focus:ring-blue-500/10
+      disabled:cursor-not-allowed
+      disabled:bg-slate-50
+      disabled:text-slate-500
+      disabled:hover:border-slate-300;
   }
 
   .field-label {
-    @apply mb-1.5 block text-sm font-medium text-slate-700;
+    @apply mb-1.5 block text-sm font-medium leading-5 text-slate-700;
   }
+
+  .field-help {
+    @apply mt-1.5 text-xs leading-4 text-slate-500;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-xs font-medium leading-4 text-red-600;
+  }
+
+  /* Cards */
 
   .card {
     @apply rounded-xl border border-slate-200 bg-white shadow-sm;
   }
 
   .card-interactive {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200
-      hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-600/10;
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm
+      transition-all duration-200
+      hover:-translate-y-0.5
+      hover:border-blue-200
+      hover:shadow-lg hover:shadow-blue-600/10
+      focus-within:border-blue-300
+      focus-within:ring-2 focus-within:ring-blue-500/10;
   }
+
+  /* Status */
 
   .status-dot {
     @apply relative inline-flex h-1.5 w-1.5 rounded-full;
@@ -115,5 +194,48 @@ body {
   .status-dot::after {
     content: "";
     @apply relative inline-flex h-1.5 w-1.5 rounded-full bg-current;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Accessibility
+   ───────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid rgb(37 99 235);
+  outline-offset: 2px;
+}
+
+/* Prevent animated UI from being uncomfortable for users
+   who have requested reduced motion. */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Mobile
+   ───────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  .input-field {
+    min-height: 44px;
+    font-size: 16px;
   }
 }
