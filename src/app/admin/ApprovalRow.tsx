@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { Profile } from "@/lib/types";
+
 import { decideProfile } from "./actions";
 
 export default function ApprovalRow({
@@ -19,11 +20,18 @@ export default function ApprovalRow({
 }) {
   const [isPending, startTransition] = useTransition();
   const [done, setDone] = useState<"verified" | "rejected" | null>(null);
+  const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
 
   function decide(decision: "verified" | "rejected") {
     startTransition(async () => {
-      await decideProfile(profile.id, orgTable, orgId, decision);
-      setDone(decision);
+      try {
+        await decideProfile(profile.id, orgTable, orgId, decision);
+        setDone(decision);
+        setShowRejectConfirmation(false);
+      } catch {
+        // The server action currently does not return an ActionResult.
+        // Keep the row unchanged if the action throws.
+      }
     });
   }
 
@@ -36,27 +44,85 @@ export default function ApprovalRow({
             {profile.role}
           </span>
         </p>
+
         <p className="text-sm text-slate-500">{profile.email}</p>
+
         <p className="text-sm text-slate-500">
           {orgName} · {orgDomain}
         </p>
       </div>
+
       {done ? (
         <span
           className={`text-sm font-medium ${
             done === "verified" ? "text-green-600" : "text-red-600"
           }`}
+          role="status"
+          aria-live="polite"
         >
           {done === "verified" ? "Approved" : "Rejected"}
         </span>
       ) : (
-        <div className="flex shrink-0 gap-2">
-          <button disabled={isPending} onClick={() => decide("rejected")} className="btn-secondary flex-1 sm:flex-initial">
-            Reject
-          </button>
-          <button disabled={isPending} onClick={() => decide("verified")} className="btn-primary flex-1 sm:flex-initial">
-            Approve
-          </button>
+        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+          <div className="flex w-full gap-2 sm:w-auto">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setShowRejectConfirmation(true)}
+              className="btn-secondary min-h-10 flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 sm:flex-initial"
+            >
+              Reject
+            </button>
+
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => decide("verified")}
+              className="btn-primary min-h-10 flex-1 sm:flex-initial"
+            >
+              {isPending ? "Working…" : "Approve"}
+            </button>
+          </div>
+
+          {showRejectConfirmation && (
+            <div
+              role="alertdialog"
+              aria-labelledby={`reject-title-${profile.id}`}
+              className="w-full rounded-lg border border-red-200 bg-red-50 p-3 sm:w-80"
+            >
+              <p
+                id={`reject-title-${profile.id}`}
+                className="text-sm font-semibold text-red-900"
+              >
+                Reject this request?
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-red-800">
+                This will mark {profile.full_name}&apos;s verification request
+                as rejected.
+              </p>
+
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => setShowRejectConfirmation(false)}
+                  className="btn-secondary min-h-9 flex-1"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => decide("rejected")}
+                  className="min-h-9 flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending ? "Rejecting…" : "Yes, reject"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
