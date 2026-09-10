@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { signup } from "./actions";
@@ -10,48 +11,133 @@ import BlurText from "@/components/reactbits/BlurText";
 import StarBorder from "@/components/reactbits/StarBorder";
 import FormField from "@/components/FormField";
 
+interface FieldErrors {
+  fullName?: string;
+  email?: string;
+  password?: string;
+  orgName?: string;
+  orgCity?: string;
+}
+
 export default function SignupPage() {
   const router = useRouter();
+
   const [role, setRole] = useState<"hr" | "tp">("tp");
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function validate(
+    fullName: string,
+    email: string,
+    password: string,
+    orgName: string,
+  ): FieldErrors {
+    const nextErrors: FieldErrors = {};
+
+    if (!fullName.trim()) {
+      nextErrors.fullName = "Full name is required.";
+    } else if (fullName.trim().length < 2) {
+      nextErrors.fullName = "Enter your full name.";
+    }
+
+    if (!email.trim()) {
+      nextErrors.email = "Email address is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    if (!orgName.trim()) {
+      nextErrors.orgName =
+        role === "hr"
+          ? "Company name is required."
+          : "College name is required.";
+    }
+
+
+    return nextErrors;
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+
+    if (loading) return;
+
+    setErrors({});
+    setFormError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
 
-    const result = await signup(formData);
+    const fullName = String(formData.get("fullName") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+    const orgName = String(formData.get("orgName") ?? "");
 
-    if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
-      setLoading(false);
-      return;
-    }
-
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const validationErrors = validate(
+      fullName,
       email,
       password,
-    });
+      orgName,
+    );
 
-    if (signInError) {
-      setError("Account created — please log in.");
-      router.push("/login");
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    router.push("/pending");
-    router.refresh();
+    setLoading(true);
+
+    try {
+      const result = await signup(formData);
+
+      if (!result.success) {
+        setFormError(
+          result.error ?? "We couldn't create your account. Please try again.",
+        );
+        return;
+      }
+
+      const supabase = createClient();
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (signInError) {
+        router.push("/login");
+        return;
+      }
+
+      router.push("/pending");
+      router.refresh();
+    } catch {
+      setFormError(
+        "We couldn't create your account right now. Please check your connection and try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleRoleChange(nextRole: "hr" | "tp") {
+    if (loading) return;
+
+    setRole(nextRole);
+    setErrors({});
+    setFormError(null);
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
       <AuthBackdrop />
+
       <FullLogo className="mb-2" />
 
       <div className="card w-full max-w-md p-6 sm:p-8">
@@ -61,10 +147,13 @@ export default function SignupPage() {
           animateBy="words"
           delay={80}
         />
-        <p className="mt-1 text-sm text-slate-500">
-          Invite-only portal for verified company HR and college T&amp;P teams.
+
+        <p className="mt-1 text-sm leading-5 text-slate-500">
+          Invite-only portal for verified company HR and college T&amp;P
+          teams.
         </p>
 
+        {/* Account type */}
         <div
           role="group"
           aria-label="Account type"
@@ -73,8 +162,9 @@ export default function SignupPage() {
           <button
             type="button"
             aria-pressed={role === "tp"}
-            onClick={() => setRole("tp")}
-            className={`rounded-md py-2 text-sm font-semibold transition-all ${
+            disabled={loading}
+            onClick={() => handleRoleChange("tp")}
+            className={`min-h-11 rounded-md px-3 text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 ${
               role === "tp"
                 ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200"
                 : "text-slate-500 hover:text-slate-700"
@@ -82,11 +172,13 @@ export default function SignupPage() {
           >
             T&amp;P Officer
           </button>
+
           <button
             type="button"
             aria-pressed={role === "hr"}
-            onClick={() => setRole("hr")}
-            className={`rounded-md py-2 text-sm font-semibold transition-all ${
+            disabled={loading}
+            onClick={() => handleRoleChange("hr")}
+            className={`min-h-11 rounded-md px-3 text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 ${
               role === "hr"
                 ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200"
                 : "text-slate-500 hover:text-slate-700"
@@ -96,48 +188,116 @@ export default function SignupPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <p className="mt-2 text-xs leading-4 text-slate-500">
+          {role === "hr"
+            ? "Register as a company representative to post opportunities and connect with colleges."
+            : "Register as a college T&P representative to discover opportunities and coordinate placements."}
+        </p>
+
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="mt-6 space-y-4"
+        >
           <input type="hidden" name="role" value={role} />
 
-          <FormField label="Full name" name="fullName" required />
           <FormField
-            label={role === "hr" ? "Official company email" : "Official college email"}
+            label="Full name"
+            name="fullName"
+            placeholder="Enter your full name"
+            autoComplete="name"
+            required
+            error={errors.fullName}
+          />
+
+          <FormField
+            label={
+              role === "hr"
+                ? "Official company email"
+                : "Official college email"
+            }
             name="email"
             type="email"
+            placeholder={
+              role === "hr" ? "you@company.com" : "you@college.edu"
+            }
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
+            error={errors.email}
+            helperText={
+              role === "hr"
+                ? "Use your company email when possible."
+                : "Use your official college email when possible."
+            }
           />
-          <FormField label="Password" name="password" type="password" required minLength={8} />
+
+          <FormField
+            label="Password"
+            name="password"
+            type="password"
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            error={errors.password}
+            helperText="Use at least 8 characters."
+          />
+
           <FormField
             label={role === "hr" ? "Company name" : "College name"}
             name="orgName"
+            placeholder={
+              role === "hr"
+                ? "Enter your company name"
+                : "Enter your college name"
+            }
+            autoComplete="organization"
             required
+            error={errors.orgName}
           />
-          {role === "tp" && <FormField label="City" name="orgCity" />}
 
-          {error && (
-            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
+          {role === "tp" && (
+            <FormField
+              label="City"
+              name="orgCity"
+              placeholder="e.g. Mumbai"
+              autoComplete="address-level2"
+              error={errors.orgCity}
+            />
+          )}
+
+          {formError && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-5 text-red-700"
+            >
+              {formError}
+            </div>
           )}
 
           <StarBorder
             type="submit"
             disabled={loading}
-            className={`w-full ${loading ? "opacity-70" : ""}`}
+            aria-busy={loading}
+            className="w-full"
           >
             {loading ? "Creating account…" : "Create account"}
           </StarBorder>
         </form>
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-5 px-4 text-center text-sm text-slate-500">
         Already have an account?{" "}
-        <a href="/login" className="font-medium text-blue-600 hover:text-blue-700">
+        <Link
+          href="/login"
+          className="font-medium text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        >
           Log in
-        </a>
+        </Link>
       </p>
     </div>
   );
 }
-
-
