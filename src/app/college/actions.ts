@@ -4,11 +4,20 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireVerifiedRole } from "@/lib/guards";
 
+type ActionResult = { success: true } | { success: false; error: string };
+
 export async function upsertInterest(
   postingId: string,
   interestedCount: number,
   eligibleCount: number,
-) {
+): Promise<ActionResult> {
+  if (interestedCount < 0 || eligibleCount < 0) {
+    return { success: false, error: "Counts cannot be negative." };
+  }
+  if (interestedCount > eligibleCount) {
+    return { success: false, error: "Interested count cannot exceed eligible count." };
+  }
+
   const profile = await requireVerifiedRole("tp");
   const supabase = await createClient();
 
@@ -24,17 +33,20 @@ export async function upsertInterest(
     { onConflict: "posting_id,college_id" },
   );
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath(`/college/postings/${postingId}`);
   revalidatePath("/college/dashboard");
+  return { success: true };
 }
 
 export async function sendMessageAsTp(
   postingId: string,
   companyId: string,
   body: string,
-) {
+): Promise<ActionResult> {
+  if (!body.trim()) return { success: false, error: "Message cannot be empty." };
+
   const profile = await requireVerifiedRole("tp");
   const supabase = await createClient();
 
@@ -44,15 +56,16 @@ export async function sendMessageAsTp(
     company_id: companyId,
     sender_id: profile.id,
     sender_role: "tp",
-    body,
+    body: body.trim(),
   });
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath(`/college/postings/${postingId}`);
+  return { success: true };
 }
 
-export async function confirmCamp(campId: string) {
+export async function confirmCamp(campId: string): Promise<ActionResult> {
   await requireVerifiedRole("tp");
   const supabase = await createClient();
 
@@ -61,7 +74,8 @@ export async function confirmCamp(campId: string) {
     .update({ status: "confirmed" })
     .eq("id", campId);
 
-  if (error) throw new Error(error.message);
+  if (error) return { success: false, error: error.message };
 
   revalidatePath("/college/camps");
+  return { success: true };
 }

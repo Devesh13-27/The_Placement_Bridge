@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
-import LogoutButton from "@/components/LogoutButton";
-import Logo from "@/components/Logo";
+import Nav from "@/components/Nav";
 import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
 import Icon from "@/components/Icon";
@@ -43,13 +42,7 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <header className="border-b border-slate-200/80 bg-white/80 shadow-sm shadow-slate-900/[0.02] backdrop-blur">
-        <div className="h-0.5 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600" />
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5">
-          <Logo textClassName="hidden sm:inline" />
-          <LogoutButton />
-        </div>
-      </header>
+      <Nav orgName="Admin" links={[{ href: "/admin", label: "Verification queue" }]} />
 
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8">

@@ -5,6 +5,7 @@ import EmptyState from "@/components/EmptyState";
 import FadeInStagger from "@/components/reactbits/FadeInStagger";
 import Icon from "@/components/Icon";
 import { CAMP_STATUS_LABEL } from "@/lib/statusStyles";
+import { formatDate } from "@/lib/utils";
 import ConfirmButton from "./ConfirmButton";
 import type { CampVisit } from "@/lib/types";
 
@@ -61,7 +62,7 @@ export default async function CollegeCampsPage() {
                   {c.companies?.name}
                 </p>
                 <p className="text-sm text-slate-500">
-                  {c.postings?.role_title} · {c.scheduled_date}
+                  {c.postings?.role_title} · {formatDate(c.scheduled_date)}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">

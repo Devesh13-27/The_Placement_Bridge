@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { sendMessageAsTp, confirmCamp } from "@/app/college/actions";
 import { CAMP_STATUS_LABEL } from "@/lib/statusStyles";
+import { formatDate } from "@/lib/utils";
 import type { Message, CampVisit } from "@/lib/types";
 
 export default function TpThreadPanel({
@@ -19,33 +20,46 @@ export default function TpThreadPanel({
   const [messages, setMessages] = useState(initialMessages);
   const [text, setText] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    const body = text;
+    const body = text.trim();
+    setSendError(null);
+
+    // Optimistic update
+    const optimistic: Message = {
+      id: crypto.randomUUID(),
+      posting_id: postingId,
+      college_id: "",
+      company_id: companyId,
+      sender_id: "me",
+      sender_role: "tp",
+      body,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
     setText("");
+
     startTransition(async () => {
-      await sendMessageAsTp(postingId, companyId, body);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          posting_id: postingId,
-          college_id: "",
-          company_id: companyId,
-          sender_id: "me",
-          sender_role: "tp",
-          body,
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      const result = await sendMessageAsTp(postingId, companyId, body);
+      if (!result.success) {
+        // Roll back optimistic message on failure
+        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+        setSendError(result.error);
+      }
     });
   }
 
   function handleConfirm() {
     if (!camp) return;
-    startTransition(() => confirmCamp(camp.id));
+    setConfirmError(null);
+    startTransition(async () => {
+      const result = await confirmCamp(camp.id);
+      if (!result.success) setConfirmError(result.error);
+    });
   }
 
   return (
@@ -58,18 +72,24 @@ export default function TpThreadPanel({
         <div className="flex flex-col gap-2 border-b border-slate-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 sm:flex-row sm:items-center sm:justify-between">
           <span>
             {camp.type === "camp" ? "Recruitment camp" : "Industry visit"} proposed for{" "}
-            {camp.scheduled_date} — {CAMP_STATUS_LABEL[camp.status]}
+            {formatDate(camp.scheduled_date)} — {CAMP_STATUS_LABEL[camp.status]}
           </span>
           {camp.status === "proposed" && (
             <button
               onClick={handleConfirm}
               disabled={isPending}
-              className="self-start rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:self-auto"
+              className="self-start rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:self-auto"
             >
               Confirm
             </button>
           )}
         </div>
+      )}
+
+      {confirmError && (
+        <p role="alert" className="border-b border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {confirmError}
+        </p>
       )}
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
@@ -90,6 +110,12 @@ export default function TpThreadPanel({
         ))}
       </div>
 
+      {sendError && (
+        <p role="alert" className="border-t border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {sendError}
+        </p>
+      )}
+
       <form onSubmit={handleSend} className="flex gap-2 border-t border-slate-200 p-3">
         <input
           value={text}
@@ -97,7 +123,7 @@ export default function TpThreadPanel({
           placeholder="Message the HR contact…"
           className="input-field flex-1"
         />
-        <button type="submit" disabled={isPending} className="btn-primary">
+        <button type="submit" disabled={isPending || !text.trim()} className="btn-primary">
           Send
         </button>
       </form>
