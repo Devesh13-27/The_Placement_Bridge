@@ -50,9 +50,9 @@ export default async function CollegeDashboard() {
           { href: "/college/camps", label: "Camps & visits" },
         ]}
       />
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         {!!postings?.length && (
-          <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <StatCard
               label="Open opportunities"
               value={postings.length}
@@ -73,7 +73,20 @@ export default async function CollegeDashboard() {
           </div>
         )}
 
-        <h1 className="mb-6 text-xl font-semibold text-slate-900">Relevant openings</h1>
+        <div className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+            Opportunities
+          </p>
+
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+            Relevant openings
+          </h1>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Browse active opportunities from companies and log your college&apos;s
+            interest.
+          </p>
+        </div>
 
         {!postings?.length && (
           <EmptyState
@@ -83,7 +96,7 @@ export default async function CollegeDashboard() {
           />
         )}
 
-        <FadeInStagger className="space-y-3">
+        <FadeInStagger className="space-y-3 sm:space-y-4">
           {postings?.map((p) => (
             <ExpandablePostingCard key={p.id} posting={p} mine={interestMap.get(p.id)} />
           ))}

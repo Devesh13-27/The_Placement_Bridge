@@ -47,9 +47,9 @@ export default async function CompanyDashboard() {
         orgName={company?.name ?? ""}
         links={[{ href: "/company/dashboard", label: "Postings" }]}
       />
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         {!!postings?.length && (
-          <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <StatCard
               label="Open postings"
               value={openCount}
@@ -70,9 +70,23 @@ export default async function CompanyDashboard() {
           </div>
         )}
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-xl font-semibold text-slate-900">Your hiring postings</h1>
-          <Link href="/company/postings/new" className="btn-primary sm:self-auto">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              Hiring
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+              Your hiring postings
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Manage your openings and see which colleges are interested.
+            </p>
+          </div>
+
+          <Link
+            href="/company/postings/new"
+            className="btn-primary w-full sm:w-auto"
+          >
             <Icon name="plus" />
             New posting
           </Link>
@@ -94,7 +108,7 @@ export default async function CompanyDashboard() {
 
         <FadeInStagger className="space-y-3">
           {postings?.map((p) => (
-            <Link key={p.id} href={`/company/postings/${p.id}`} className="card-interactive block p-4">
+            <Link key={p.id} href={`/company/postings/${p.id}`} className="card-interactive block p-4 sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900">{p.role_title}</p>
