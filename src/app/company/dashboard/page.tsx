@@ -73,10 +73,10 @@ export default async function CompanyDashboard() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              Hiring
+              Job Postings
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-              Your hiring postings
+              Your job postings...
             </h1>
             <p className="mt-1 text-sm text-slate-500">
               Manage your openings and see which colleges are interested.
@@ -88,14 +88,14 @@ export default async function CompanyDashboard() {
             className="btn-primary w-full sm:w-auto"
           >
             <Icon name="plus" />
-            New posting
+            New job posting
           </Link>
         </div>
 
         {!postings?.length && (
           <EmptyState
             icon={<Icon name="document" />}
-            title="No postings yet"
+            title="No job postings yet"
             description="Create one to start reaching colleges and see who's interested."
             action={
               <Link href="/company/postings/new" className="btn-primary">

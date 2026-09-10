@@ -46,15 +46,15 @@ export default async function CollegeDashboard() {
       <Nav
         orgName={college?.name ?? ""}
         links={[
-          { href: "/college/dashboard", label: "Openings" },
-          { href: "/college/camps", label: "Camps & visits" },
+          { href: "/college/dashboard", label: "Job Postings" },
+          { href: "/college/camps", label: "Recruitment Activities" },
         ]}
       />
       <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         {!!postings?.length && (
           <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <StatCard
-              label="Open opportunities"
+              label="Open job postings"
               value={postings.length}
               icon={<Icon name="briefcase" />}
               tone="green"

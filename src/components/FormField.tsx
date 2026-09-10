@@ -1,75 +1,52 @@
 import type { InputHTMLAttributes } from "react";
 
-interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+type FormFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
-  helperText?: string;
   error?: string;
-}
+  helperText?: string;
+};
 
 export default function FormField({
   label,
   name,
-  type = "text",
-  helperText,
   error,
+  helperText,
+  className = "",
   id,
-  required,
-  ...rest
+  ...props
 }: FormFieldProps) {
   const inputId = id ?? name;
-  const helperId = helperText ? `${inputId}-helper` : undefined;
-  const errorId = error ? `${inputId}-error` : undefined;
-
-  const describedBy = [helperId, errorId].filter(Boolean).join(" ") || undefined;
+  const errorId = `${inputId}-error`;
+  const helperId = `${inputId}-helper`;
 
   return (
-    <div className="block">
+    <div className="block text-sm">
       <label htmlFor={inputId} className="field-label">
         {label}
-        {required && (
-          <span
-            aria-hidden="true"
-            className="ml-1 text-red-500"
-          >
-            *
-          </span>
-        )}
-        {required && (
-          <span className="sr-only"> (required)</span>
-        )}
+        {props.required && <span className="ml-1 text-red-500">*</span>}
       </label>
 
       <input
         id={inputId}
         name={name}
-        type={type}
-        required={required}
-        aria-invalid={error ? "true" : "false"}
-        aria-describedby={describedBy}
-        className={`input-field ${
-          error
-            ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
-            : ""
-        }`}
-        {...rest}
+        {...props}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={
+          error ? errorId : helperText ? helperId : undefined
+        }
+        className={`input-field mt-1 ${className}`}
       />
 
-      {helperText && !error && (
-        <p id={helperId} className="field-help">
-          {helperText}
-        </p>
-      )}
-
-      {error && (
-        <p
-          id={errorId}
-          className="field-error"
-          role="alert"
-        >
+      {error ? (
+        <p id={errorId} role="alert" className="mt-1.5 text-sm text-red-600">
           {error}
         </p>
-      )}
+      ) : helperText ? (
+        <p id={helperId} className="mt-1.5 text-xs text-slate-500">
+          {helperText}
+        </p>
+      ) : null}
     </div>
   );
 }

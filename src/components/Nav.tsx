@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import LogoutButton from "./LogoutButton";
 
+
 export default function Nav({
   orgName,
   links,
@@ -32,6 +33,22 @@ export default function Nav({
       document.body.style.overflow = originalOverflow;
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+  if (!menuOpen) return;
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      setMenuOpen(false);
+    }
+  }
+
+  document.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    document.removeEventListener("keydown", handleKeyDown);
+  };
+}, [menuOpen]);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -144,57 +161,56 @@ export default function Nav({
       <div
         id={menuId}
         className={`overflow-hidden border-t border-slate-200 bg-white transition-[max-height,opacity] duration-200 sm:hidden ${
-          menuOpen
-            ? "max-h-[32rem] opacity-100"
-            : "pointer-events-none max-h-0 opacity-0"
+          menuOpen ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"
         }`}
-        aria-hidden={!menuOpen}
       >
-        <div className="px-4 py-3">
-          <div className="mb-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white"
-            >
-              {initial}
-            </span>
+        {menuOpen && (
+          <div className="px-4 py-3">
+            <div className="mb-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white"
+              >
+                {initial}
+              </span>
 
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                Account
-              </p>
-              <p className="truncate text-sm font-medium text-slate-800">
-                {orgName || "—"}
-              </p>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  Account
+                </p>
+                <p className="truncate text-sm font-medium text-slate-800">
+                  {orgName || "—"}
+                </p>
+              </div>
+            </div>
+
+            <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+              {links.map((link) => {
+                const active = isActive(link.href);
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <LogoutButton className="btn-secondary min-h-11 w-full justify-center" />
             </div>
           </div>
-
-          <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
-            {links.map((link) => {
-              const active = isActive(link.href);
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setMenuOpen(false)}
-                  className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-3 border-t border-slate-100 pt-3">
-            <LogoutButton className="btn-secondary min-h-11 w-full justify-center" />
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );

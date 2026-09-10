@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import type { Profile } from "@/lib/types";
-
 import { decideProfile } from "./actions";
 
 export default function ApprovalRow({
@@ -21,16 +20,22 @@ export default function ApprovalRow({
   const [isPending, startTransition] = useTransition();
   const [done, setDone] = useState<"verified" | "rejected" | null>(null);
   const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function decide(decision: "verified" | "rejected") {
+    setError(null);
+
     startTransition(async () => {
       try {
         await decideProfile(profile.id, orgTable, orgId, decision);
         setDone(decision);
         setShowRejectConfirmation(false);
       } catch {
-        // The server action currently does not return an ActionResult.
-        // Keep the row unchanged if the action throws.
+        setError(
+          decision === "rejected"
+            ? "Unable to reject this request. Please try again."
+            : "Unable to approve this request. Please try again.",
+        );
       }
     });
   }
@@ -68,7 +73,10 @@ export default function ApprovalRow({
             <button
               type="button"
               disabled={isPending}
-              onClick={() => setShowRejectConfirmation(true)}
+              onClick={() => {
+                setError(null);
+                setShowRejectConfirmation(true);
+              }}
               className="btn-secondary min-h-10 flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 sm:flex-initial"
             >
               Reject
@@ -87,7 +95,9 @@ export default function ApprovalRow({
           {showRejectConfirmation && (
             <div
               role="alertdialog"
+              aria-modal="true"
               aria-labelledby={`reject-title-${profile.id}`}
+              aria-describedby={`reject-description-${profile.id}`}
               className="w-full rounded-lg border border-red-200 bg-red-50 p-3 sm:w-80"
             >
               <p
@@ -97,7 +107,10 @@ export default function ApprovalRow({
                 Reject this request?
               </p>
 
-              <p className="mt-1 text-xs leading-5 text-red-800">
+              <p
+                id={`reject-description-${profile.id}`}
+                className="mt-1 text-xs leading-5 text-red-800"
+              >
                 This will mark {profile.full_name}&apos;s verification request
                 as rejected.
               </p>
@@ -106,7 +119,10 @@ export default function ApprovalRow({
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => setShowRejectConfirmation(false)}
+                  onClick={() => {
+                    setShowRejectConfirmation(false);
+                    setError(null);
+                  }}
                   className="btn-secondary min-h-9 flex-1"
                 >
                   Cancel
@@ -122,6 +138,16 @@ export default function ApprovalRow({
                 </button>
               </div>
             </div>
+          )}
+
+          {error && (
+            <p
+              role="alert"
+              aria-live="assertive"
+              className="w-full rounded-md bg-red-50 px-3 py-2 text-xs text-red-700 sm:w-80"
+            >
+              {error}
+            </p>
           )}
         </div>
       )}

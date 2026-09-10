@@ -17,8 +17,11 @@ export default function InterestForm({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (isPending) return;
+
     setSaved(false);
     setError(null);
 
@@ -27,59 +30,127 @@ export default function InterestForm({
       return;
     }
 
+    if (interested < 0 || eligible < 0) {
+      setError("Student counts cannot be negative.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await upsertInterest(postingId, interested, eligible);
-      if (!result.success) {
-        setError(result.error);
-      } else {
+      try {
+        const result = await upsertInterest(postingId, interested, eligible);
+
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+
         setSaved(true);
+      } catch {
+        setError("Unable to save the interest count. Please try again.");
       }
     });
   }
 
+  function handleEligibleChange(value: string) {
+    const nextValue = Number(value);
+
+    setEligible(Number.isNaN(nextValue) ? 0 : Math.max(0, nextValue));
+    setSaved(false);
+    setError(null);
+  }
+
+  function handleInterestedChange(value: string) {
+    const nextValue = Number(value);
+
+    setInterested(Number.isNaN(nextValue) ? 0 : Math.max(0, nextValue));
+    setSaved(false);
+    setError(null);
+  }
+
+  const invalid = interested > eligible;
+
   return (
-    <form onSubmit={handleSubmit} className="card space-y-3 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="card space-y-4 p-4 sm:p-5"
+      aria-busy={isPending}
+    >
+      <div>
+        <h2 className="text-sm font-semibold text-slate-900">
+          Student interest
+        </h2>
+        <p className="mt-0.5 text-xs leading-5 text-slate-500">
+          Record how many students are eligible and interested in this posting.
+        </p>
+      </div>
+
       <label className="block text-sm">
         <span className="field-label">Eligible students</span>
         <input
           type="number"
           min={0}
+          step={1}
+          inputMode="numeric"
           value={eligible}
-          onChange={(e) => { setEligible(Number(e.target.value)); setSaved(false); }}
+          onChange={(e) => handleEligibleChange(e.target.value)}
+          disabled={isPending}
+          aria-invalid={invalid}
           className="input-field"
         />
       </label>
+
       <label className="block text-sm">
         <span className="field-label">Interested students</span>
         <input
           type="number"
           min={0}
           max={eligible}
+          step={1}
+          inputMode="numeric"
           value={interested}
-          onChange={(e) => { setInterested(Number(e.target.value)); setSaved(false); }}
+          onChange={(e) => handleInterestedChange(e.target.value)}
+          disabled={isPending}
+          aria-invalid={invalid}
           className="input-field"
         />
       </label>
-      {interested > eligible && (
-        <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
-          Interested cannot exceed eligible students.
+
+      {invalid && (
+        <p
+          role="alert"
+          className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-5 text-amber-700"
+        >
+          Interested count cannot exceed eligible count.
         </p>
       )}
+
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-5 text-red-700"
+        >
           {error}
         </p>
       )}
+
       <button
         type="submit"
-        disabled={isPending || interested > eligible}
-        className="btn-primary w-full"
+        disabled={isPending || invalid}
+        className="btn-primary min-h-10 w-full"
       >
         {isPending ? "Saving…" : existing ? "Update count" : "Log interest"}
       </button>
-      {saved && !isPending && (
-        <p className="text-center text-sm font-medium text-green-600">✓ Saved</p>
-      )}
+
+      <div
+        role="status"
+        aria-live="polite"
+        className={`min-h-5 text-center text-sm font-medium ${
+          saved ? "text-green-600" : "text-transparent"
+        }`}
+      >
+        {saved ? "✓ Interest count saved successfully" : " "}
+      </div>
     </form>
   );
 }

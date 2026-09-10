@@ -22,14 +22,17 @@ export default function TpThreadPanel({
   const [isPending, startTransition] = useTransition();
   const [sendError, setSendError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmSaved, setConfirmSaved] = useState(false);
 
-  function handleSend(e: React.FormEvent) {
+  function handleSend(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!text.trim()) return;
-    const body = text.trim();
-    setSendError(null);
 
-    // Optimistic update
+    const body = text.trim();
+    if (!body || isPending) return;
+
+    setSendError(null);
+    setText("");
+
     const optimistic: Message = {
       id: crypto.randomUUID(),
       posting_id: postingId,
@@ -40,30 +43,59 @@ export default function TpThreadPanel({
       body,
       created_at: new Date().toISOString(),
     };
+
     setMessages((prev) => [...prev, optimistic]);
-    setText("");
 
     startTransition(async () => {
-      const result = await sendMessageAsTp(postingId, companyId, body);
-      if (!result.success) {
-        // Roll back optimistic message on failure
-        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-        setSendError(result.error);
+      try {
+        const result = await sendMessageAsTp(postingId, companyId, body);
+
+        if (!result.success) {
+          setMessages((prev) =>
+            prev.filter((m) => m.id !== optimistic.id),
+          );
+          setText(body);
+          setSendError(result.error);
+        }
+      } catch {
+        setMessages((prev) =>
+          prev.filter((m) => m.id !== optimistic.id),
+        );
+        setText(body);
+        setSendError("Unable to send the message. Please try again.");
       }
     });
   }
 
   function handleConfirm() {
-    if (!camp) return;
+    if (!camp || camp.status !== "proposed" || isPending) return;
+
     setConfirmError(null);
+    setConfirmSaved(false);
+
     startTransition(async () => {
-      const result = await confirmCamp(camp.id);
-      if (!result.success) setConfirmError(result.error);
+      try {
+        const result = await confirmCamp(camp.id);
+
+        if (!result.success) {
+          setConfirmError(result.error);
+          return;
+        }
+
+        setConfirmSaved(true);
+      } catch {
+        setConfirmError(
+          "Unable to confirm this proposal. Please try again.",
+        );
+      }
     });
   }
 
   return (
-    <div className="card flex h-full min-h-[500px] flex-col overflow-hidden">
+    <div
+      className="card flex h-full min-h-[500px] flex-col overflow-hidden"
+      aria-busy={isPending}
+    >
       <div className="border-b border-slate-200 bg-slate-50/50 p-3">
         <h3 className="font-medium text-slate-900">Message HR</h3>
       </div>
@@ -71,31 +103,51 @@ export default function TpThreadPanel({
       {camp && (
         <div className="flex flex-col gap-2 border-b border-slate-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {camp.type === "camp" ? "Recruitment camp" : "Industry visit"} proposed for{" "}
-            {formatDate(camp.scheduled_date)} — {CAMP_STATUS_LABEL[camp.status]}
+            {camp.type === "camp" ? "Recruitment camp" : "Industry visit"}{" "}
+            proposed for {formatDate(camp.scheduled_date)} —{" "}
+            {CAMP_STATUS_LABEL[camp.status]}
           </span>
+
           {camp.status === "proposed" && (
             <button
+              type="button"
               onClick={handleConfirm}
               disabled={isPending}
-              className="self-start rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:self-auto"
+              className="self-start rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:self-auto"
             >
-              Confirm
+              {isPending ? "Confirming…" : "Confirm"}
             </button>
           )}
         </div>
       )}
 
+      {confirmSaved && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="border-b border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+        >
+          ✓ Recruitment proposal confirmed successfully.
+        </p>
+      )}
+
       {confirmError && (
-        <p role="alert" className="border-b border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="border-b border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
           {confirmError}
         </p>
       )}
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {!messages.length && (
-          <p className="text-sm text-slate-400">No messages yet — say hello.</p>
+          <p className="text-sm text-slate-400">
+            No messages yet — say hello.
+          </p>
         )}
+
         {messages.map((m) => (
           <div
             key={m.id}
@@ -111,20 +163,41 @@ export default function TpThreadPanel({
       </div>
 
       {sendError && (
-        <p role="alert" className="border-t border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="border-t border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
           {sendError}
         </p>
       )}
 
-      <form onSubmit={handleSend} className="flex gap-2 border-t border-slate-200 p-3">
+      <form
+        onSubmit={handleSend}
+        className="flex gap-2 border-t border-slate-200 p-3"
+      >
+        <label htmlFor="tp-message" className="sr-only">
+          Message the HR contact
+        </label>
+
         <input
+          id="tp-message"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setSendError(null);
+          }}
           placeholder="Message the HR contact…"
-          className="input-field flex-1"
+          disabled={isPending}
+          className="input-field min-w-0 flex-1"
         />
-        <button type="submit" disabled={isPending || !text.trim()} className="btn-primary">
-          Send
+
+        <button
+          type="submit"
+          disabled={isPending || !text.trim()}
+          className="btn-primary shrink-0"
+        >
+          {isPending ? "Sending…" : "Send"}
         </button>
       </form>
     </div>

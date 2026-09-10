@@ -24,47 +24,118 @@ export default function ThreadPanel({
   const [text, setText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [showCampForm, setShowCampForm] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
+  const [campError, setCampError] = useState<string | null>(null);
+  const [messageSaved, setMessageSaved] = useState(false);
+  const [campSaved, setCampSaved] = useState(false);
 
-  function handleSend(e: React.FormEvent) {
+  function handleSend(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!text.trim()) return;
-    const body = text;
+
+    const body = text.trim();
+    if (!body || isPending) return;
+
+    setMessageError(null);
+    setMessageSaved(false);
     setText("");
+
     startTransition(async () => {
-      await sendMessageAsHr(postingId, companyId, collegeId, body);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          posting_id: postingId,
-          college_id: collegeId,
-          company_id: companyId,
-          sender_id: "me",
-          sender_role: "hr",
+      try {
+        const result = await sendMessageAsHr(
+          postingId,
+          companyId,
+          collegeId,
           body,
-          created_at: new Date().toISOString(),
-        },
-      ]);
+        );
+
+        if (!result.success) {
+          setMessageError(result.error);
+          setText(body);
+          return;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            posting_id: postingId,
+            college_id: collegeId,
+            company_id: companyId,
+            sender_id: "me",
+            sender_role: "hr",
+            body,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        setMessageSaved(true);
+      } catch {
+        setMessageError("Unable to send the message. Please try again.");
+        setText(body);
+      }
     });
   }
 
   function handleProposeCamp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (isPending) return;
+
     const formData = new FormData(e.currentTarget);
     const type = formData.get("type") as "camp" | "visit";
     const date = formData.get("date") as string;
+
+    setCampError(null);
+    setCampSaved(false);
+
+    if (!date) {
+      setCampError("Please select a date.");
+      return;
+    }
+
     startTransition(async () => {
-      await proposeCamp(postingId, companyId, collegeId, type, date);
-      setShowCampForm(false);
+      try {
+        const result = await proposeCamp(
+          postingId,
+          companyId,
+          collegeId,
+          type,
+          date,
+        );
+
+        if (!result.success) {
+          setCampError(result.error);
+          return;
+        }
+
+        setShowCampForm(false);
+        setCampSaved(true);
+      } catch {
+        setCampError(
+          "Unable to propose the camp or visit. Please try again.",
+        );
+      }
     });
   }
 
   return (
     <div className="card flex h-full min-h-[500px] flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/50 p-3">
-        <h3 className="font-medium text-slate-900">{collegeName}</h3>
-        <button onClick={() => setShowCampForm((v) => !v)} className="btn-ghost text-xs">
-          Propose camp / visit
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/50 p-3">
+        <h3 className="min-w-0 truncate font-medium text-slate-900">
+          {collegeName}
+        </h3>
+
+        <button
+          type="button"
+          onClick={() => {
+            setShowCampForm((v) => !v);
+            setCampError(null);
+            setCampSaved(false);
+          }}
+          disabled={isPending}
+          className="btn-ghost shrink-0 text-xs"
+        >
+          {showCampForm ? "Cancel" : "Propose camp / visit"}
         </button>
       </div>
 
@@ -75,26 +146,71 @@ export default function ThreadPanel({
         </div>
       )}
 
+      {campSaved && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="border-b border-slate-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+        >
+          ✓ Proposal sent successfully.
+        </p>
+      )}
+
       {showCampForm && (
         <form
           onSubmit={handleProposeCamp}
           className="flex flex-col gap-2 border-b border-slate-200 p-3 sm:flex-row sm:items-end"
         >
-          <select name="type" className="input-field py-1.5 sm:w-auto">
-            <option value="camp">Recruitment camp</option>
-            <option value="visit">Industry visit</option>
-          </select>
-          <input name="date" type="date" required className="input-field py-1.5 sm:w-auto" />
-          <button type="submit" disabled={isPending} className="btn-primary py-1.5">
-            Propose
+          <label className="flex-1 text-sm sm:flex-initial">
+            <span className="sr-only">Proposal type</span>
+            <select
+              name="type"
+              disabled={isPending}
+              className="input-field py-1.5"
+            >
+              <option value="camp">Recruitment camp</option>
+              <option value="visit">Industry visit</option>
+            </select>
+          </label>
+
+          <label className="flex-1 text-sm sm:flex-initial">
+            <span className="sr-only">Proposal date</span>
+            <input
+              name="date"
+              type="date"
+              required
+              disabled={isPending}
+              className="input-field py-1.5"
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="btn-primary min-h-10 py-1.5"
+          >
+            {isPending ? "Sending…" : "Propose"}
           </button>
         </form>
       )}
 
+      {campError && (
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="border-b border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {campError}
+        </p>
+      )}
+
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {!messages.length && (
-          <p className="text-sm text-slate-400">No messages yet — say hello.</p>
+          <p className="text-sm text-slate-400">
+            No messages yet — say hello.
+          </p>
         )}
+
         {messages.map((m) => (
           <div
             key={m.id}
@@ -109,15 +225,53 @@ export default function ThreadPanel({
         ))}
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-2 border-t border-slate-200 p-3">
+      {messageSaved && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="border-t border-slate-200 bg-green-50 px-3 py-2 text-center text-xs font-medium text-green-700"
+        >
+          ✓ Message sent
+        </p>
+      )}
+
+      {messageError && (
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="border-t border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {messageError}
+        </p>
+      )}
+
+      <form
+        onSubmit={handleSend}
+        className="flex gap-2 border-t border-slate-200 p-3"
+      >
+        <label className="sr-only" htmlFor="message">
+          Message the T&P officer
+        </label>
+
         <input
+          id="message"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setMessageError(null);
+            setMessageSaved(false);
+          }}
           placeholder="Message the T&P officer…"
-          className="input-field flex-1"
+          disabled={isPending}
+          className="input-field min-w-0 flex-1"
         />
-        <button type="submit" disabled={isPending} className="btn-primary">
-          Send
+
+        <button
+          type="submit"
+          disabled={isPending || !text.trim()}
+          className="btn-primary shrink-0"
+        >
+          {isPending ? "Sending…" : "Send"}
         </button>
       </form>
     </div>

@@ -15,6 +15,7 @@ export default function LogoutButton({ className }: { className?: string }) {
 
   return (
     <button
+      type="button"
       onClick={handleLogout}
       className={className ?? "btn-secondary"}
     >

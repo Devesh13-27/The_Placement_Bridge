@@ -61,8 +61,8 @@ export default async function CollegePostingDetail({
       <Nav
         orgName={college?.name ?? ""}
         links={[
-          { href: "/college/dashboard", label: "Openings" },
-          { href: "/college/camps", label: "Camps & visits" },
+          { href: "/college/dashboard", label: "Job Postings" },
+          { href: "/college/camps", label: "Recruitment Activities" },
         ]}
       />
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -70,7 +70,7 @@ export default async function CollegePostingDetail({
           href="/college/dashboard"
           className="text-sm font-medium text-slate-500 hover:text-slate-900"
         >
-          ← All openings
+          ← All job postings
         </Link>
 
         <div className="mt-3 flex flex-col gap-4 card p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
