@@ -23,7 +23,17 @@ export default function StatusSelect({
 
     startTransition(async () => {
       try {
-        await updatePostingStatus(postingId, next);
+        const result = await updatePostingStatus(postingId, next);
+
+        if (!result.success) {
+          if (selectRef.current) {
+            selectRef.current.value = status;
+          }
+
+          setFeedback("error");
+          return;
+        }
+
         setFeedback("saved");
       } catch {
         if (selectRef.current) {

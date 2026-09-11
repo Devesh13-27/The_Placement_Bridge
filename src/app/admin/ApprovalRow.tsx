@@ -27,7 +27,13 @@ export default function ApprovalRow({
 
     startTransition(async () => {
       try {
-        await decideProfile(profile.id, orgTable, orgId, decision);
+        const result = await decideProfile(profile.id, orgTable, orgId, decision);
+
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+
         setDone(decision);
         setShowRejectConfirmation(false);
       } catch {
